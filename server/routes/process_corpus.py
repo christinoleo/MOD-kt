@@ -2,12 +2,16 @@ from routes import LOGGER, fetch_user, UserData, ErrorResponse
 from typing import List, Dict, Optional
 from models.document import Document
 from utils import (
-    process_text, term_frequency,
-    batch_processing, t_SNE,
-    similarity_graph)
+    process_text,
+    term_frequency,
+    batch_processing,
+    t_SNE,
+    similarity_graph,
+)
 from clusterer import Clusterer
 from pydantic import BaseModel
 from fastapi import APIRouter
+import traceback
 
 
 class ProcessCorpusBaseForm(BaseModel):
@@ -49,7 +53,8 @@ def process_corpus(form: ProcessCorpusForm):
             fn=process_text,
             data=[doc.content for doc in corpus],
             deep=True,
-            stop_words=user.stop_words)
+            stop_words=user.stop_words,
+        )
         tf = batch_processing(fn=term_frequency, data=processed)
 
         for doc in corpus:
@@ -75,6 +80,7 @@ def process_corpus(form: ProcessCorpusForm):
 
     except Exception as e:
         LOGGER.debug(e)
+        traceback.print_exc()
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)
 
@@ -84,16 +90,15 @@ def process_corpus(form: ProcessCorpusIncrementForm):
     try:
         user = fetch_user(userId=form.userId)
 
-        docs = [
-            Document(userId=form.userId, id=id)
-            for id in form.new_docs]
+        docs = [Document(userId=form.userId, id=id) for id in form.new_docs]
         stop_words = user.stop_words
 
         processed = batch_processing(
             fn=process_text,
             data=[doc.content for doc in docs],
             deep=True,
-            stop_words=stop_words)
+            stop_words=stop_words,
+        )
         tf = batch_processing(fn=term_frequency, data=processed)
 
         for doc in docs:
@@ -117,10 +122,8 @@ def process_corpus(form: ProcessCorpusIncrementForm):
         user.tsne = tsne
 
         clusterer = Clusterer(
-            user=user,
-            index=user.index,
-            k=form.seed.cluster_k,
-            seed=form.seed)
+            user=user, index=user.index, k=form.seed.cluster_k, seed=form.seed
+        )
 
         response = {
             "newData": {
@@ -130,17 +133,16 @@ def process_corpus(form: ProcessCorpusIncrementForm):
                 "graph": user.graph,
                 "tsne": user.tsne,
                 "clusters": {
-                    "cluster_k":        clusterer.k,
-                    "labels":           clusterer.doc_labels.tolist(),
-                    "colors":           clusterer.colors,
-                    "cluster_names":    clusterer.cluster_names,
-                    "cluster_docs":     clusterer.doc_clusters,
-                    "cluster_words":    [[
-                        {"word": word, "weight": 1}
-                        for word in paragraph[:5]
-                    ] for paragraph in clusterer.seed_paragraphs
-                    ]
-                }
+                    "cluster_k": clusterer.k,
+                    "labels": clusterer.doc_labels.tolist(),
+                    "colors": clusterer.colors,
+                    "cluster_names": clusterer.cluster_names,
+                    "cluster_docs": clusterer.doc_clusters,
+                    "cluster_words": [
+                        [{"word": word, "weight": 1} for word in paragraph[:5]]
+                        for paragraph in clusterer.seed_paragraphs
+                    ],
+                },
             }
         }
         return ProcessCorpusResponse(**response)

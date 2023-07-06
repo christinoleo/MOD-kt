@@ -1,6 +1,6 @@
 from typing import Dict, List, Any, Optional, Type
 from pydantic import BaseModel
-from models.user import User
+from models.users import User
 from fastapi import Form
 import logging
 import inspect

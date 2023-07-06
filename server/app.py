@@ -29,6 +29,7 @@ FRONTEND_ROUTES = ["", "corpus", "dashboard", "sessions"]
 
 app = FastAPI(title="i2DC", default_response_class=ORJSONResponse)
 prefix = getenv("SERVER_URL_PREFIX", "")
+prefix = ""
 
 app.mount(f"{prefix}/static", StaticFiles(directory="static"), name="static")
 

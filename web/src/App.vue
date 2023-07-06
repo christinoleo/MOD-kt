@@ -61,6 +61,7 @@
             </b-nav-item>
           </b-navbar-nav>
         </b-col>
+
         <!-- Right aligned nav items -->
         <b-col cols="6">
           <b-navbar-nav class="ml-auto align-right">
@@ -116,6 +117,17 @@
                 Log Out
               </b-dropdown-item>
             </b-nav-item-dropdown>
+          </b-navbar-nav>
+
+          <b-navbar-nav v-if="VAKG">
+            <vakg-input />
+            <!-- <b-form-input
+              v-model="VAKGThoughts"
+              placeholder="enter your thoughts"
+              @keydown.native="thoughts_keydown_handler"
+              class="form-control"
+            >
+            </b-form-input> -->
           </b-navbar-nav>
         </b-col>
       </b-collapse>
@@ -198,6 +210,7 @@
 <script>
 import NotesWidget from "./components/dashboard/NotesWidget";
 import UploadComponent from "./components/UploadComponent";
+import VAKGInput from "./components/VAKGInput";
 import { mapState, mapActions } from "vuex";
 
 export default {
@@ -205,9 +218,11 @@ export default {
   components: {
     "notes-widget": NotesWidget,
     "upload-component": UploadComponent,
+    "vakg-input": VAKGInput,
   },
-  data: function () {
+  data: function() {
     return {
+      VAKG: !!process.env.VUE_APP_VAKG_SERVER,
       title: "Mod-Kt",
       userData: undefined,
       keys: {
@@ -262,14 +277,15 @@ export default {
     this.userData = this.getUserData(userId);
 
     this.userData
-      .then(function () {
+      .then(function() {
         objRef.makeToast(
           "Logged in successfully!",
           "Welcome, " + objRef.$store.state.userData.userId,
           "success"
         );
       })
-      .catch(function () {
+      .catch(function(e) {
+        console.error(e);
         alert("No such user exists!");
         window.location.reload();
       });
@@ -301,10 +317,10 @@ export default {
       this.userData = this.getUserData(this.userId);
 
       this.userData
-        .then(function () {
+        .then(function() {
           objRef.makeToast("Success!", "User data reloaded!", "success");
         })
-        .catch(function () {
+        .catch(function() {
           objRef.makeToast(
             "Oops, somethings went wrong!",
             "Try reloading the page",
@@ -317,10 +333,11 @@ export default {
 
       if (confirm("You're about to erase all of your data, are you sure?")) {
         this.clearUserData()
-          .then(function () {
+          .then(function() {
             objRef.makeToast("Success!", "User data cleared!", "success");
           })
-          .catch(function () {
+          .catch(function(e) {
+            console.error(e);
             objRef.makeToast(
               "Oops, something went wrong!",
               "Try reloading the page",
@@ -344,7 +361,8 @@ export default {
 
       this.cluster()
         .then(() => objRef.updateDashboard())
-        .catch(() => {
+        .catch((e) => {
+          console.error(e);
           objRef.makeToast(
             "Oops, something went wrong!",
             "Please, try again",
@@ -372,7 +390,8 @@ export default {
           );
           objRef.getUserData(objRef.userId);
         })
-        .catch(() => {
+        .catch((e) => {
+          console.error(e);
           objRef.makeToast(
             "Oops, something went wrong!",
             "Please, try again",
@@ -384,14 +403,20 @@ export default {
     updateDashboard() {
       ++this.keys.dashboard;
     },
-    ...mapActions(["cluster", "getUserData", "clearUserData", "saveSession"]),
+    ...mapActions([
+      "cluster",
+      "getUserData",
+      "clearUserData",
+      "saveSession",
+      "newThought",
+    ]),
   },
 };
 </script>
 
 <style lang="sass">
 body, html
-  padding-top: 30px
+  padding-top: 50px
   height: 100% !important
   width: 100% !important
 

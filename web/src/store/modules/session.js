@@ -12,7 +12,7 @@ const state = {
     colors: [],
     cluster_docs: [],
     cluster_words: [],
-    labels: []
+    labels: [],
   },
   controls: {
     projection: undefined,
@@ -21,7 +21,7 @@ const state = {
     distance: undefined,
     n_neighbors: undefined,
     linkDistance: undefined,
-    charge: undefined
+    charge: undefined,
   },
   date: undefined,
   selected: [],
@@ -29,8 +29,8 @@ const state = {
   highlight: undefined,
   word_similarity: {
     query: [],
-    most_similar: []
-  }
+    most_similar: [],
+  },
 };
 
 const mutations = {
@@ -49,7 +49,7 @@ const mutations = {
   setIndex(state, index) {
     state.index = index;
   },
-  setGraph(state, {nodes, distance, neighborhood}) {
+  setGraph(state, { nodes, distance, neighborhood }) {
     state.graph.nodes = nodes;
     state.graph.distance = distance;
     state.graph.neighborhood = neighborhood;
@@ -57,11 +57,10 @@ const mutations = {
   setTsne(state, tsne) {
     state.tsne = tsne;
   },
-  setClusters(state, {
-    cluster_k, cluster_names,
-    colors, cluster_docs, labels,
-    cluster_words
-  }) {
+  setClusters(
+    state,
+    { cluster_k, cluster_names, colors, cluster_docs, labels, cluster_words }
+  ) {
     state.clusters.cluster_k = cluster_k;
     state.clusters.cluster_names = cluster_names;
     state.clusters.colors = colors;
@@ -72,7 +71,7 @@ const mutations = {
   updateClusters(state, cluster) {
     if (cluster.index == state.clusters.cluster_k) {
       ++state.clusters.cluster_k;
-      
+
       state.clusters.colors.push(cluster.color);
       state.clusters.cluster_names.push(cluster.cluster_name);
       state.clusters.cluster_words.push(cluster.words);
@@ -89,11 +88,18 @@ const mutations = {
     state.clusters.cluster_words.splice(index, 1);
     delete state.clusters.cluster_docs[cluster_name];
   },
-  setControls(state, {
-    projection, tsne, distance,
-    n_neighbors, linkDistance,
-    charge, link_selector
-  }) {
+  setControls(
+    state,
+    {
+      projection,
+      tsne,
+      distance,
+      n_neighbors,
+      linkDistance,
+      charge,
+      link_selector,
+    }
+  ) {
     state.controls.projection = projection;
     state.controls.tsne = { perplexity: tsne.perplexity };
     state.controls.link_selector = link_selector;
@@ -110,7 +116,7 @@ const mutations = {
   },
   updateSelected(state, id) {
     let index = state.selected.indexOf(id);
-      
+
     if (index == -1) {
       state.selected.push(id);
       state.focused = id;
@@ -123,46 +129,53 @@ const mutations = {
     state.highlight = cluster_name;
   },
   updateHighlight(state, cluster_name) {
-    state.highlight = (state.highlight == cluster_name) ? "" : cluster_name;
+    state.highlight = state.highlight == cluster_name ? "" : cluster_name;
   },
   setFocused(state, id) {
     state.focused = id;
   },
-  setWordSimilarity(state, {query, most_similar}) {
+  setWordSimilarity(state, { query, most_similar }) {
     state.word_similarity.query = query;
     state.word_similarity.most_similar = most_similar;
-  }
+  },
+  setProjection(state, value) {
+    state.controls.projection = value;
+  },
+  setPerplexity(state, value) {
+    state.controls.tsne.perplexity = value;
+  },
 };
 
 const getters = {
   session(state) {
     return {
-      id:               state.id,
-      name:             state.name,
-      notes:            state.notes,
-      index:            state.index,
-      graph:            state.graph,
-      tsne:             state.tsne,
-      clusters:         state.clusters,
-      controls:         state.controls,
-      date:             state.date,
-      selected:         state.selected,
-      focused:          state.focused,
-      highlight:        state.highlight,
-      word_similarity:  state.word_similarity
-    }
+      id: state.id,
+      name: state.name,
+      notes: state.notes,
+      index: state.index,
+      graph: state.graph,
+      tsne: state.tsne,
+      clusters: state.clusters,
+      controls: state.controls,
+      date: state.date,
+      selected: state.selected,
+      focused: state.focused,
+      highlight: state.highlight,
+      word_similarity: state.word_similarity,
+    };
   },
   nodes(state) {
     return state.graph.nodes;
   },
   links(state) {
     if (state.controls.link_selector == "Neighborhood") {
-      return state.graph.neighborhood.filter((link) => 
-        link.value <= state.controls.n_neighbors
+      return state.graph.neighborhood.filter(
+        (link) => link.value <= state.controls.n_neighbors
       );
     } else {
-      return state.graph.distance.filter((link) => 
-        link.value <= state.controls.distance);
+      return state.graph.distance.filter(
+        (link) => link.value <= state.controls.distance
+      );
     }
   },
   index_size(state) {
@@ -177,5 +190,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 };

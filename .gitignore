@@ -3,3 +3,5 @@ vetur.config.js
 .env
 *__pycache__*
 /venv/
+example/
+log

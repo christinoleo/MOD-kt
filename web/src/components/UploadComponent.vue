@@ -190,7 +190,8 @@ export default {
                 objRef.$bvToast.hide("processing_increment");
                 objRef.$emit("re-render");
               })
-              .catch(() => {
+              .catch((e) => {
+                console.error(e);
                 objRef.$bvToast.hide("processing_increment");
                 objRef.makeToast(
                   "Error",
@@ -200,7 +201,8 @@ export default {
               });
           }
         })
-        .catch(() => {
+        .catch((e) => {
+          console.error(e);
           objRef.makeToast(
             "Error",
             "Oops, looks like something went wrong",

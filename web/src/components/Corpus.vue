@@ -341,7 +341,8 @@ export default {
             "success"
           ); // variant
         })
-        .catch(function () {
+        .catch(function (e) {
+          console.error(e);
           objRef.makeToast(
             "Oops, something went wrong!", // title
             "Try reloading the page", // content
@@ -378,7 +379,8 @@ export default {
             "success"
           ); // variant
         })
-        .catch(function () {
+        .catch(function (e) {
+          console.error(e);
           objRef.makeToast(
             "Oops, something went wrong!", // title
             "Try reloading the page", // content
@@ -409,7 +411,8 @@ export default {
           objRef.get_userData(objRef.userId);
           objRef.$bvModal.show("dashboard-redirect-modal");
         })
-        .catch(function () {
+        .catch(function (e) {
+          console.error(e);
           objRef.makeToast(
             "Oops, something went wrong", // title
             "Internal error", // content

@@ -2,7 +2,7 @@ from routes import LOGGER, fetch_user
 from routes import ErrorResponse, SessionData
 from pydantic import BaseModel
 from fastapi import APIRouter
-from models.user import User
+from models.users import User
 from typing import Dict
 
 

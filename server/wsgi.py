@@ -13,7 +13,7 @@ logging.basicConfig(filename=os.path.abspath("./log/server.log"),
 
 faulthandler.enable()
 
-load_dotenv('.env')
+load_dotenv('../web/.env')
 
 # Data folders
 os.environ["TOKENIZERS_PARALLELISM"] = "false"

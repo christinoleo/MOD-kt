@@ -18,7 +18,7 @@ class BagOfWords:
         vectorizer = TfidfVectorizer(min_df=2)
 
         tfidf_matrix = vectorizer.fit_transform(corpus)
-        tfidf_feature_names = vectorizer.get_feature_names()
+        tfidf_feature_names = vectorizer.get_feature_names_out()
         tfidf_feature_names_hashmap = {}
 
         n, m = tfidf_matrix.shape  # (N documents, M features)

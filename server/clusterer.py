@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 from sklearn.utils import shuffle
 from sklearn.cluster import KMeans
-from models.user import User
+from models.users import User
 from models.document import Document
 from utils import l2_norm
 

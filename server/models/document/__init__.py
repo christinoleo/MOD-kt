@@ -7,6 +7,7 @@ import numbers
 import pickle
 import json
 import os
+from pathlib import Path
 
 
 @dataclass
@@ -31,9 +32,7 @@ class Bert:
 
     def train(self, corpus: List[str]) -> list:
         queue = Queue()
-        p = Process(
-            target=self._train,
-            kwargs={"queue": queue, "corpus": corpus})
+        p = Process(target=self._train, kwargs={"queue": queue, "corpus": corpus})
         p.start()
         self.embeddings = queue.get()
         p.join()
@@ -42,9 +41,7 @@ class Bert:
 
     def predict(self, data: Iterable[str]) -> List[List[float]]:
         queue = Queue()
-        p = Process(
-            target=self._train,
-            kwargs={"queue": queue, "corpus": data})
+        p = Process(target=self._train, kwargs={"queue": queue, "corpus": data})
         p.start()
         embeddings = queue.get()
         p.join()
@@ -70,7 +67,8 @@ class Bert:
                 obj=self,
                 file=pkl_file,
                 protocol=pickle.DEFAULT_PROTOCOL,
-                fix_imports=True)
+                fix_imports=True,
+            )
 
 
 class Document:
@@ -78,17 +76,19 @@ class Document:
         self.__userId = userId
         self.id = id
 
-        self.__path = f"./users/{self.__userId}/corpus/{self.id}.json"
+        self.__path = Path(f"./users/{self.__userId}/corpus/{self.id}.json")
 
         if not os.path.isfile(self.__path):
             return None
 
-        with open(self.__path, "r") as jsonFile:
-            doc = json.load(jsonFile, encoding="utf-8")
+        with open(self.__path._str, "r", encoding="utf-8") as jsonFile:
+            doc = json.load(jsonFile)
             self._file_name = doc["file_name"]
             self._content = doc["content"]
             self._processed = doc["processed"] if "processed" in doc else None
-            self._term_frequency = doc["term_frequency"] if "term_frequency" in doc else None
+            self._term_frequency = (
+                doc["term_frequency"] if "term_frequency" in doc else None
+            )
             self._embedding = doc["embedding"] if "embedding" in doc else None
             self._uploaded_on = doc["uploaded_on"]
 
@@ -166,14 +166,13 @@ class Document:
             processed=self._processed,
             term_frequency=self._term_frequency,
             embedding=self._embedding,
-            uploaded_on=self._uploaded_on)
+            uploaded_on=self._uploaded_on,
+        )
 
 
 def infer_doc2vec(data: str, **kwargs) -> list:
     model = kwargs.get("model", None)
-    return model.infer_vector(
-        data.split(" "), steps=35
-    ) if model else None
+    return model.infer_vector(data.split(" "), steps=35) if model else None
 
 
 class BestCMeans:
@@ -247,8 +246,7 @@ class BestCMeans:
                 np.random.seed(seed=seed)
             n = data.shape[1]
             u0 = np.random.rand(c, n)
-            u0 /= np.ones(
-                (c, 1)).dot(np.atleast_2d(u0.sum(axis=0))).astype(np.float64)
+            u0 /= np.ones((c, 1)).dot(np.atleast_2d(u0.sum(axis=0))).astype(np.float64)
             init = u0.copy()
         u0 = init
         u = np.fmax(u0, np.finfo(np.float64).eps)
@@ -287,19 +285,20 @@ class BestCMeans:
         u_old /= np.ones((c, 1)).dot(np.atleast_2d(u_old.sum(axis=0)))
         u_old = np.fmax(u_old, np.finfo(np.float64).eps)
 
-        um = u_old ** m
+        um = u_old**m
 
         # Calculate cluster centers
         data = data.T
-        cntr = um.dot(data) / (np.ones((data.shape[1],
-                                        1)).dot(np.atleast_2d(um.sum(axis=1))).T)
+        cntr = um.dot(data) / (
+            np.ones((data.shape[1], 1)).dot(np.atleast_2d(um.sum(axis=1))).T
+        )
 
         d = self._distance(data, cntr)
         d = np.fmax(d, np.finfo(np.float64).eps)
 
-        jm = (um * d ** 2).sum()
+        jm = (um * d**2).sum()
 
-        u = d ** (- 2. / (m - 1))
+        u = d ** (-2.0 / (m - 1))
         u /= np.ones((c, 1)).dot(np.atleast_2d(u.sum(axis=0)))
 
         return cntr, u, jm, d
@@ -347,8 +346,7 @@ class BestCMeans:
 
         return np.trace(u.dot(u.T)) / float(n)
 
-    def predict(self, test_data, cntr_trained, m, error, maxiter, init=None,
-                seed=None):
+    def predict(self, test_data, cntr_trained, m, error, maxiter, init=None, seed=None):
         """
         Prediction of new data in given a trained fuzzy c-means framework [1].
 
@@ -410,8 +408,7 @@ class BestCMeans:
                 np.random.seed(seed=seed)
             n = test_data.shape[1]
             u0 = np.random.rand(c, n)
-            u0 /= np.ones(
-                (c, 1)).dot(np.atleast_2d(u0.sum(axis=0))).astype(np.float64)
+            u0 /= np.ones((c, 1)).dot(np.atleast_2d(u0.sum(axis=0))).astype(np.float64)
             init = u0.copy()
         u0 = init
         u = np.fmax(u0, np.finfo(np.float64).eps)
@@ -423,8 +420,7 @@ class BestCMeans:
         # Main cmeans loop
         while p < maxiter - 1:
             u2 = u.copy()
-            [u, Jjm, d] = self._cmeans_predict0(
-                test_data, cntr_trained, u2, c, m)
+            [u, Jjm, d] = self._cmeans_predict0(test_data, cntr_trained, u2, c, m)
             jm = np.hstack((jm, Jjm))
             p += 1
 
@@ -454,7 +450,7 @@ class BestCMeans:
         u_old /= np.ones((c, 1)).dot(np.atleast_2d(u_old.sum(axis=0)))
         u_old = np.fmax(u_old, np.finfo(np.float64).eps)
 
-        um = u_old ** m
+        um = u_old**m
         test_data = test_data.T
 
         # For prediction, we do not recalculate cluster centers. The test_data is
@@ -463,17 +459,18 @@ class BestCMeans:
         d = self._distance(test_data, cntr)
         d = np.fmax(d, np.finfo(np.float64).eps)
 
-        jm = (um * d ** 2).sum()
+        jm = (um * d**2).sum()
 
-        u = d ** (- 2. / (m - 1))
+        u = d ** (-2.0 / (m - 1))
         u /= np.ones((c, 1)).dot(np.atleast_2d(u.sum(axis=0)))
 
         return u, jm, d
 
 
 class FuzzyCMeans(object):
-    def __init__(self, training_set, k, m=2.0, distance='euclidean', userU=-1, imax=25, emax=0.01):
-
+    def __init__(
+        self, training_set, k, m=2.0, distance="euclidean", userU=-1, imax=25, emax=0.01
+    ):
         self.__x = training_set
         self.__k = k
         self.m = m
@@ -482,14 +479,15 @@ class FuzzyCMeans(object):
         self.imax = imax
         self.emax = emax
 
-        if (isinstance(userU, numbers.Number)):
+        if isinstance(userU, numbers.Number):
             self.__mu = self.initializeFCM()
         else:
             _, N = userU.shape
             index = np.where(userU > 0)
             for j in range(index[1].size):
-                userU[:, index[1][j]] = userU[:, index[1][j]] / \
-                    sum(userU[:, index[1][j]])
+                userU[:, index[1][j]] = userU[:, index[1][j]] / sum(
+                    userU[:, index[1][j]]
+                )
             self.__mu = userU
 
         self.__obj = 0
@@ -513,7 +511,6 @@ class FuzzyCMeans(object):
     x = property(__getx, None)
 
     def initializeFCM(self):
-
         x = self.__x
 
         N, _ = x.shape
@@ -521,20 +518,18 @@ class FuzzyCMeans(object):
         U = np.random.random((self.__k, N))
 
         for j in range(N):
-            U[:, j] = U[:, j]/sum(U[:, j])
+            U[:, j] = U[:, j] / sum(U[:, j])
 
         return U
 
     def centers(self):
-
         x = self.__x
 
         _, M = x.shape
 
-        mm = self.__mu ** self.m
+        mm = self.__mu**self.m
 
-        tempRep = np.dot(np.ones((M, 1)),
-                         np.asanyarray([np.sum(mm, axis=1)]))
+        tempRep = np.dot(np.ones((M, 1)), np.asanyarray([np.sum(mm, axis=1)]))
 
         c = np.dot(mm, self.__x) / tempRep.T
 
@@ -542,43 +537,42 @@ class FuzzyCMeans(object):
 
         tempDist = cdist(c, x, self.dist)  # self.dist 'cosine'
         dist = tempDist**2.0
-        obj = np.sum((dist**2.0)*mm)
+        obj = np.sum((dist**2.0) * mm)
         self.__obj = obj
 
         return self.__c, self.__obj
 
     def membership(self):
-
         x = self.__x
         c = self.__c
         N, _ = x.shape
         k = self.__k
-        r = np.zeros((k, N))      # r will become mu
+        r = np.zeros((k, N))  # r will become mu
         tempDist = cdist(c, x, self.dist)  # self.dist 'cosine'
         dist = tempDist**2.0
-        temp = dist**(-2.0/(self.m-1))
+        temp = dist ** (-2.0 / (self.m - 1))
         tempSum = np.asanyarray([np.sum(temp, axis=0)])
-        r = temp/(np.dot(np.ones((k, 1)), tempSum))
+        r = temp / (np.dot(np.ones((k, 1)), tempSum))
 
         self.__mu = r
         return self.__mu
 
     def step(self):
-        '''
+        """
         This method runs one step of the algorithm. It might be useful to track
         the changes in the parameters.
 
         :Returns:
           The norm of the change in the membership values of the examples. It
           can be used to track convergence and as an estimate of the error.
-        '''
+        """
         old = self.__obj
         self.centers()
         self.membership()
         return np.abs(self.__obj - old)
 
     def __call__(self):
-        '''
+        """
         The ``__call__`` interface is used to run the algorithm until
         convergence is found.
 
@@ -594,7 +588,7 @@ class FuzzyCMeans(object):
         :Returns:
           An array containing, at each line, the vectors representing the
           centers of the clustered regions.
-        '''
+        """
         error = 1.0
         emax = self.emax
         imax = self.imax
@@ -603,18 +597,16 @@ class FuzzyCMeans(object):
         while error > emax and i < imax:
             error = self.step()
 
-            if not(isinstance(self.userU, numbers.Number)):
+            if not (isinstance(self.userU, numbers.Number)):
                 mu = self.__mu
                 k, N = mu.shape
                 index = np.where(self.userU > 0)
                 for j in range(index[1].size):
                     mu[:, index[1][j]] = 0
                 for j in range(index[1].size):
-                    mu[index[0][j], index[1][j]
-                       ] = self.userU[index[0][j], index[1][j]]
+                    mu[index[0][j], index[1][j]] = self.userU[index[0][j], index[1][j]]
                 for j in range(index[1].size):
-                    mu[:, index[1][j]] = mu[:, index[1][j]] / \
-                        sum(mu[:, index[1][j]])
+                    mu[:, index[1][j]] = mu[:, index[1][j]] / sum(mu[:, index[1][j]])
                 self.__mu = mu
             # print "obj: ", self.__obj
             i = i + 1
