@@ -3,7 +3,7 @@ from fastapi import APIRouter, UploadFile, Depends
 from typing import List, Optional, Any, Dict
 from werkzeug.utils import secure_filename
 from pydantic import BaseModel
-from utils import process_text
+from utils.utils import process_text
 from io import BytesIO
 
 
@@ -43,7 +43,7 @@ def corpus(form: CorpusForm):
         return CorpusResponse()
 
     except Exception as e:
-        LOGGER.debug(e)
+        LOGGER.error(e)
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)
 
@@ -59,7 +59,7 @@ def corpus(form: CorpusUploadForm = Depends(CorpusUploadForm.as_form)):
         f_name = secure_filename(form.fileName)
 
         if form.format == "file-pdf":
-            from utils import pdf_to_string
+            from utils.utils import pdf_to_string
 
             file_name.append(f_name)
             content.append(pdf_to_string(f_file))
@@ -85,8 +85,7 @@ def corpus(form: CorpusUploadForm = Depends(CorpusUploadForm.as_form)):
 
         elif form.format == "file-alt":
             file_name.append(f_name)
-            content.append(f_file.read().decode(
-                encoding="utf-8", errors="ignore"))
+            content.append(f_file.read().decode(encoding="utf-8", errors="ignore"))
 
             n_entries += 1
 
@@ -96,11 +95,13 @@ def corpus(form: CorpusUploadForm = Depends(CorpusUploadForm.as_form)):
         for i in range(n_entries):
             doc = dict(
                 file_name=file_name.pop(0),
-                content=process_text(content.pop(0)), deep=False)
+                content=process_text(content.pop(0)),
+                deep=False,
+            )
 
             doc = user.append_document(
-                file_name=doc["file_name"],
-                content=doc["content"])
+                file_name=doc["file_name"], content=doc["content"]
+            )
 
             newData.append(doc)
             del doc
@@ -111,6 +112,6 @@ def corpus(form: CorpusUploadForm = Depends(CorpusUploadForm.as_form)):
         return CorpusResponse(**response)
 
     except Exception as e:
-        LOGGER.debug(e)
+        LOGGER.error(e)
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)

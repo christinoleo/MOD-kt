@@ -1,6 +1,6 @@
 from routes import LOGGER, fetch_user, ErrorResponse
 from typing import Optional, List
-from utils import t_SNE
+from utils.utils import t_SNE
 from pydantic import BaseModel
 from fastapi import APIRouter
 
@@ -36,6 +36,6 @@ def projection(form: ProjectionForm):
         return ProjectionResponse(**response)
 
     except Exception as e:
-        LOGGER.debug(e)
+        LOGGER.error(e)
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)

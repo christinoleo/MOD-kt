@@ -1,5 +1,6 @@
 import os
 import json
+from utils.path import user_path
 
 
 class Session:
@@ -7,7 +8,7 @@ class Session:
         self.__userId = userId
 
         self.id = id
-        self.__path = f"./users/{self.__userId}/sessions/{self.id}.json"
+        self.__path = f"{user_path}/{self.__userId}/sessions/{self.id}.json"
 
         if not os.path.isfile(self.__path):
             return None
@@ -41,4 +42,5 @@ class Session:
             focused=self.focused,
             highlight=self.highlight,
             word_similarity=self.word_similarity,
-            date=self.date)
+            date=self.date,
+        )

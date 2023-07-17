@@ -1,6 +1,4 @@
-from routes import (
-    LOGGER, fetch_user, SessionData,
-    ClusterData, ErrorResponse)
+from routes import LOGGER, fetch_user, SessionData, ClusterData, ErrorResponse
 from clusterer import Clusterer
 from pydantic import BaseModel
 from typing import List, Dict
@@ -39,22 +37,18 @@ def cluster(form: ClusterForm):
             k = int(form.cluster_k)
             index = user.index
 
-        clusterer = Clusterer(
-            user=user,
-            index=index,
-            k=k,
-            seed=seed)
+        clusterer = Clusterer(user=user, index=index, k=k, seed=seed)
 
         clusters = {
-            "cluster_k":        clusterer.k,
-            "labels":           clusterer.doc_labels.tolist(),
-            "colors":           clusterer.colors,
-            "cluster_names":    clusterer.cluster_names,
-            "cluster_docs":     clusterer.doc_clusters,
-            "cluster_words":    [[
-                {"word": word, "weight": 1}
-                for word in paragraph["paragraph"][:5]
-            ] for paragraph in clusterer.seed_paragraphs]
+            "cluster_k": clusterer.k,
+            "labels": clusterer.doc_labels.tolist(),
+            "colors": clusterer.colors,
+            "cluster_names": clusterer.cluster_names,
+            "cluster_docs": clusterer.doc_clusters,
+            "cluster_words": [
+                [{"word": word, "weight": 1} for word in paragraph["paragraph"][:5]]
+                for paragraph in clusterer.seed_paragraphs
+            ],
         }
         session["clusters"] = ClusterData(**clusters)
 
@@ -62,6 +56,6 @@ def cluster(form: ClusterForm):
         return ClusterResponse(**response)
 
     except Exception as e:
-        LOGGER.debug(e)
+        LOGGER.error(e)
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)

@@ -5,7 +5,7 @@ from sklearn.utils import shuffle
 from sklearn.cluster import KMeans
 from models.users import User
 from models.document import Document
-from utils import l2_norm
+from utils.path import user_path
 
 # https://medialab.github.io/iwanthue/
 # Default pre-set
@@ -13,21 +13,33 @@ from utils import l2_norm
 # soft (k-means)
 # color blind setting
 color_palette = [
-    "#885fd8", "#5fb440", "#c657be", "#b6b630", "#5a78d8",
-    "#df8e28", "#8974be", "#669c4f", "#d7418f", "#4aaa86",
-    "#d54156", "#5a9fd0", "#cd542c", "#b86daf", "#ac9135",
-    "#c575a0", "#9c874a", "#b6557a", "#c2744e", "#c3666b"]
+    "#885fd8",
+    "#5fb440",
+    "#c657be",
+    "#b6b630",
+    "#5a78d8",
+    "#df8e28",
+    "#8974be",
+    "#669c4f",
+    "#d7418f",
+    "#4aaa86",
+    "#d54156",
+    "#5a9fd0",
+    "#cd542c",
+    "#b86daf",
+    "#ac9135",
+    "#c575a0",
+    "#9c874a",
+    "#b6557a",
+    "#c2744e",
+    "#c3666b",
+]
 
 
 class Clusterer:
-    clusterer_path = "./users/{}/doc_clusterer.bin"
+    clusterer_path = f"{user_path}/{{}}/doc_clusterer.bin"
 
-    def __init__(self,
-                 user: User,
-                 index: list,
-                 k: int,
-                 seed: dict = None):
-
+    def __init__(self, user: User, index: list, k: int, seed: dict = None):
         self.userId = user.userId
 
         # SETTINGS
@@ -55,16 +67,14 @@ class Clusterer:
 
         self.seed_paragraphs = []
         w_centers = self.word_vectors.cluster(
-            userId=user.userId,
-            k=self.k,
-            seed=self.seed)
+            userId=user.userId, k=self.k, seed=self.seed
+        )
 
         # Builds seed paragraphs to cluster documents
         self.seed_paragraphs = [
-            self.word_vectors.seed_paragraph(
-                userId=user.userId,
-                centroid=centroid
-            ) for centroid in w_centers]
+            self.word_vectors.seed_paragraph(userId=user.userId, centroid=centroid)
+            for centroid in w_centers
+        ]
 
         # If word_vectors is Bag-of-Words:
         # seed_paragraph has "vector"
@@ -73,9 +83,8 @@ class Clusterer:
         if not [p["vector"] for p in self.seed_paragraphs if "vector" in p]:
             vectors = self.doc_vectors.get_vectors(
                 userId=user.userId,
-                data=[
-                    " ".join(p["paragraph"])
-                    for p in self.seed_paragraphs])
+                data=[" ".join(p["paragraph"]) for p in self.seed_paragraphs],
+            )
 
             for i in range(self.k):
                 self.seed_paragraphs[i]["vector"] = vectors.pop(0)
@@ -84,7 +93,8 @@ class Clusterer:
             userId=user.userId,
             k=self.k,
             seed_paragraphs=self.seed_paragraphs,
-            embeddings=self.embeddings)
+            embeddings=self.embeddings,
+        )
 
         self.cluster_names = []
         self.colors = []
@@ -102,8 +112,7 @@ class Clusterer:
             self.doc_clusters[f"{cluster_name}"] = list()
 
         for index, label in enumerate(self.doc_labels):
-            self.doc_clusters[f"{self.cluster_names[label]}"].append(
-                corpus[index].id)
+            self.doc_clusters[f"{self.cluster_names[label]}"].append(corpus[index].id)
 
     @classmethod
     def predict(cls, userId: str, docs: list) -> list:
@@ -111,8 +120,5 @@ class Clusterer:
 
         if os.path.isfile(model_path):
             kmeans = pickle.load(open(model_path, "rb"))
-            return kmeans.predict([
-                doc.embedding
-                for doc in docs
-            ])
+            return kmeans.predict([doc.embedding for doc in docs])
         return None

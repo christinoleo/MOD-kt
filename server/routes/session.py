@@ -41,7 +41,7 @@ def session(userId: str, sessionId: str):
         return SessionResponse(**response)
 
     except Exception as e:
-        LOGGER.debug(e)
+        LOGGER.error(e)
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)
 
@@ -63,13 +63,14 @@ def session(form: SessionForm):
             selected=session["selected"],
             focused=session["focused"],
             highlight=session["highlight"],
-            word_similarity=session["word_similarity"])
+            word_similarity=session["word_similarity"],
+        )
 
         response = {"sessionData": SessionData(**session)}
         return SessionResponse(**response)
 
     except Exception as e:
-        LOGGER.debug(e)
+        LOGGER.error(e)
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)
 
@@ -82,6 +83,6 @@ def session(form: SessionDeleteForm):
         return SessionResponse()
 
     except Exception as e:
-        LOGGER.debug(e)
+        LOGGER.error(e)
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)

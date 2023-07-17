@@ -2,15 +2,14 @@ from models.document import Document
 from models.session import Session
 from datetime import datetime
 from models import ModelType
-from importlib.util import (
-    spec_from_file_location,
-    module_from_spec)
+from importlib.util import spec_from_file_location, module_from_spec
 from uuid import uuid4
 import numpy as np
 import threading
 import pathlib
 import json
 import os
+from utils.path import user_path
 
 
 class User:
@@ -18,7 +17,8 @@ class User:
         self.userId = userId
 
         # PATHS
-        self.__user = os.path.abspath(f"./users/{self.userId}")
+        self.__user = os.path.abspath(f"{user_path}/{self.userId}")
+        print(self.__user)
         self.__corpus = f"{self.__user}/corpus"
         self.__sessions = f"{self.__user}/sessions"
         self.__graph = f"{self.__user}/graph.json"
@@ -121,20 +121,13 @@ class User:
     @property
     def index(self) -> list:
         if os.path.isfile(self.__index):
-            index = np.loadtxt(
-                self.__index,
-                encoding="utf-8",
-                dtype=str).tolist()
+            index = np.loadtxt(self.__index, encoding="utf-8", dtype=str).tolist()
             return [index] if type(index) == str else index
         return self.generate_index()
 
     @index.setter
     def index(self, index: list):
-        np.savetxt(self.__index,
-                   index,
-                   encoding="utf-8",
-                   fmt="%s",
-                   newline="\n")
+        np.savetxt(self.__index, index, encoding="utf-8", fmt="%s", newline="\n")
 
     def generate_index(self) -> list:
         ids = []
@@ -144,27 +137,22 @@ class User:
                 ids.append(id)
         ids.sort()
 
-        np.savetxt(self.__index,
-                   ids,
-                   encoding="utf-8",
-                   fmt="%s",
-                   newline="\n")
+        np.savetxt(self.__index, ids, encoding="utf-8", fmt="%s", newline="\n")
         return ids
 
     # CORPUS
     @property
     def corpus(self) -> list:
-        return [Document(
-            userId=self.userId, id=id
-        ) for id in self.index]
+        return [Document(userId=self.userId, id=id) for id in self.index]
 
-    def append_document(self,
-                        file_name: str,
-                        content: str,
-                        term_frequency: dict = None,
-                        processed: str = None,
-                        embedding: list = None) -> dict:
-
+    def append_document(
+        self,
+        file_name: str,
+        content: str,
+        term_frequency: dict = None,
+        processed: str = None,
+        embedding: list = None,
+    ) -> dict:
         uuid = str(uuid4())
         file_path = f"{self.__corpus}/{uuid}.json"
 
@@ -172,7 +160,8 @@ class User:
             "id": uuid,
             "file_name": file_name,
             "content": content,
-            "uploaded_on": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S-UTC")}
+            "uploaded_on": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S-UTC"),
+        }
         if embedding:
             document["embedding"] = embedding
         if term_frequency:
@@ -200,28 +189,28 @@ class User:
 
         # INDEX UPDATE
         self.index = [
-            item for idx, item in enumerate(index)
-            if not idx in idx_to_remove]
+            item for idx, item in enumerate(index) if not idx in idx_to_remove
+        ]
         del index
 
         # TSNE UPDATE
         tsne = self.tsne
-        self.tsne = [
-            item for idx, item in enumerate(tsne)
-            if not idx in idx_to_remove]
+        self.tsne = [item for idx, item in enumerate(tsne) if not idx in idx_to_remove]
         del tsne
 
         # GRAPH UPDATE
         graph = self.graph
-        graph["nodes"] = [
-            node for node in graph["nodes"]
-            if not node["id"] in ids]
+        graph["nodes"] = [node for node in graph["nodes"] if not node["id"] in ids]
         graph["distance"] = [
-            link for link in graph["distance"]
-            if not (link["source"] in ids or link["target"] in ids)]
+            link
+            for link in graph["distance"]
+            if not (link["source"] in ids or link["target"] in ids)
+        ]
         graph["neighborhood"] = [
-            link for link in graph["neighborhood"]
-            if not (link["source"] in ids or link["target"] in ids)]
+            link
+            for link in graph["neighborhood"]
+            if not (link["source"] in ids or link["target"] in ids)
+        ]
         self.graph = graph
 
     # SESSIONS
@@ -234,28 +223,28 @@ class User:
             if ext == ".json":
                 sessions.append(id)
 
-        sessions.sort(key=lambda date: datetime.strptime(
-            date,
-            "{0}_%Y-%m-%d_%H:%M:%S".format(self.userId)))
-        return [
-            Session(userId=self.userId, id=id)
-            for id in sessions]
+        sessions.sort(
+            key=lambda date: datetime.strptime(
+                date, "{0}_%Y-%m-%d_%H:%M:%S".format(self.userId)
+            )
+        )
+        return [Session(userId=self.userId, id=id) for id in sessions]
 
-    def append_session(self,
-                       name: str,
-                       notes: str,
-                       index: list,
-                       graph: dict,
-                       clusters: dict,
-                       tsne: list,
-                       controls: dict,
-                       selected: list,
-                       focused: str,
-                       highlight: str,
-                       word_similarity: dict) -> dict:
-
-        id = datetime.utcnow().strftime(
-            "{0}_%Y-%m-%d_%H:%M:%S".format(self.userId))
+    def append_session(
+        self,
+        name: str,
+        notes: str,
+        index: list,
+        graph: dict,
+        clusters: dict,
+        tsne: list,
+        controls: dict,
+        selected: list,
+        focused: str,
+        highlight: str,
+        word_similarity: dict,
+    ) -> dict:
+        id = datetime.utcnow().strftime("{0}_%Y-%m-%d_%H:%M:%S".format(self.userId))
         session_path = f"{self.__sessions}/{id}.json"
 
         session = dict(
@@ -271,11 +260,11 @@ class User:
             focused=focused,
             highlight=highlight,
             word_similarity=word_similarity,
-            date=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S-UTC"))
+            date=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S-UTC"),
+        )
 
         # ASYNC
-        t = threading.Thread(target=User.async_write,
-                             args=(session_path, session))
+        t = threading.Thread(target=User.async_write, args=(session_path, session))
         t.start()
 
         return session
@@ -287,12 +276,15 @@ class User:
                 os.remove(f"{self.__sessions}/{f_path}")
 
     def session_list(self):
-        return [{
-            "id":       session.id,
-            "name":     session.name,
-            "date":     session.date,
-            "notes":    session.notes
-        } for session in self.sessions]
+        return [
+            {
+                "id": session.id,
+                "name": session.name,
+                "date": session.date,
+                "notes": session.notes,
+            }
+            for session in self.sessions
+        ]
 
     # GRAPH
     @property
@@ -306,8 +298,7 @@ class User:
     @graph.setter
     def graph(self, graph: dict):
         # ASYNC
-        t = threading.Thread(target=User.async_write,
-                             args=(self.__graph, graph))
+        t = threading.Thread(target=User.async_write, args=(self.__graph, graph))
         t.start()
 
     # TSNE
@@ -323,21 +314,15 @@ class User:
 
     @property
     def word_vectors(self):
-        return self.__model(
-            model_type=ModelType.WORD,
-            name=self.word_model)
+        return self.__model(model_type=ModelType.WORD, name=self.word_model)
 
     @property
     def doc_vectors(self):
-        return self.__model(
-            model_type=ModelType.DOCUMENT,
-            name=self.doc_model)
+        return self.__model(model_type=ModelType.DOCUMENT, name=self.doc_model)
 
     # UTILS
     def __model(self, model_type: ModelType, name: str):
-        spec = spec_from_file_location(
-            name,
-            f"./models/{model_type.value}/{name}.py")
+        spec = spec_from_file_location(name, f"./models/{model_type.value}/{name}.py")
         module = module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
@@ -345,14 +330,10 @@ class User:
     def train(self) -> list:
         corpus = [doc.processed for doc in self.corpus]
 
-        embeddings = self.doc_vectors.train_model(
-            userId=self.userId,
-            corpus=corpus)
+        embeddings = self.doc_vectors.train_model(userId=self.userId, corpus=corpus)
 
         if self.word_model != self.doc_model:
-            self.word_vectors.train_model(
-                userId=self.userId,
-                corpus=corpus)
+            self.word_vectors.train_model(userId=self.userId, corpus=corpus)
 
         return embeddings
 
@@ -369,7 +350,8 @@ class User:
             userId=self.userId,
             corpus=[doc.as_dict() for doc in self.corpus],
             graph=self.graph,
-            tsne=self.tsne)
+            tsne=self.tsne,
+        )
 
     def clear_workspace(self):
         files = [
@@ -377,7 +359,8 @@ class User:
             self.__graph,
             self.__tsne,
             self.__settings,
-            self.__clusterer]
+            self.__clusterer,
+        ]
 
         for f_path in files:
             if os.path.isfile(f_path):
@@ -395,35 +378,33 @@ class User:
 
     def userData(self) -> dict:
         return {
-            "userId":       self.userId,
-            "corpus":       [doc.as_dict() for doc in self.corpus if doc],
-            "sessions":     self.session_list(),
-            "isProcessed":  self.isProcessed,
-            "stop_words":    self.stop_words}
+            "userId": self.userId,
+            "corpus": [doc.as_dict() for doc in self.corpus if doc],
+            "sessions": self.session_list(),
+            "isProcessed": self.isProcessed,
+            "stop_words": self.stop_words,
+        }
 
     def sessionData(self, id: str = None) -> dict:
         if id:
-            session = Session(
-                userId=self.userId,
-                id=id
-            ).as_dict()
+            session = Session(userId=self.userId, id=id).as_dict()
             session["sessions"] = self.session_list()
         else:
             session = {
-                "id":       None,
-                "userId":   self.userId,
-                "name":     "Default",
-                "notes":    "",
-                "index":    self.index,
-                "graph":    self.graph,
+                "id": None,
+                "userId": self.userId,
+                "name": "Default",
+                "notes": "",
+                "index": self.index,
+                "graph": self.graph,
                 "clusters": {
                     "cluster_names": [],
                     "colors": [],
                     "cluster_words": [],
                     "cluster_docs": [],
-                    "cluster_k": None
+                    "cluster_k": None,
                 },
-                "tsne":     self.tsne,
+                "tsne": self.tsne,
                 "controls": {
                     "projection": "t-SNE",
                     "tsne": {"perplexity": 30},
@@ -431,13 +412,12 @@ class User:
                     "distance": 0.1,
                     "n_neighbors": 0,
                     "linkDistance": 20,
-                    "charge": -30},
+                    "charge": -30,
+                },
                 "date": None,
                 "selected": [self.index[0]],
                 "focused": self.index[0],
                 "highlight": "",
-                "word_similarity": {
-                    "query": [],
-                    "most_similar": []
-                }}
+                "word_similarity": {"query": [], "most_similar": []},
+            }
         return session

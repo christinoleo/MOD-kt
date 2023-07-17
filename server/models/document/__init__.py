@@ -8,6 +8,7 @@ import pickle
 import json
 import os
 from pathlib import Path
+from utils.path import user_path
 
 
 @dataclass
@@ -76,7 +77,7 @@ class Document:
         self.__userId = userId
         self.id = id
 
-        self.__path = Path(f"./users/{self.__userId}/corpus/{self.id}.json")
+        self.__path = Path(f"{user_path}/{self.__userId}/corpus/{self.id}.json")
 
         if not os.path.isfile(self.__path):
             return None

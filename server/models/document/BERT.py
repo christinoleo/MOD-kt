@@ -4,15 +4,13 @@ from sklearn.cluster import KMeans
 from models.document import Bert
 from pathlib import Path
 import numpy as np
-
+from utils.path import user_path
 
 name = splitext(basename(__file__))[0]
 
 
 def model_path(userId: str) -> str:
-    return str(Path(
-        f"./users/{userId}/{name}.bin"
-    ).resolve())
+    return str(Path(f"{user_path}/{userId}/{name}.bin").resolve())
 
 
 def load_model(userId: str) -> Bert:
@@ -41,17 +39,16 @@ def get_vectors(userId: str, data: Iterable[str]) -> List[List[float]]:
     return model.predict(data=data) if data else model.embeddings
 
 
-def cluster(userId: str,
-            seed_paragraphs: Iterable[Dict[str, Iterable]],
-            k: int,
-            embeddings: List) -> Iterable[int]:
+def cluster(
+    userId: str,
+    seed_paragraphs: Iterable[Dict[str, Iterable]],
+    k: int,
+    embeddings: List,
+) -> Iterable[int]:
     doc_seeds = get_vectors(
-        userId=userId,
-        data=[" ".join(p["paragraph"]) for p in seed_paragraphs])
+        userId=userId, data=[" ".join(p["paragraph"]) for p in seed_paragraphs]
+    )
 
     return KMeans(
-        n_clusters=k,
-        init=np.array(doc_seeds, dtype=np.float32),
-        n_init=10,
-        tol=1e-5
+        n_clusters=k, init=np.array(doc_seeds, dtype=np.float32), n_init=10, tol=1e-5
     ).fit_predict(embeddings)

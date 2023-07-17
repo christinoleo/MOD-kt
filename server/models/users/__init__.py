@@ -6,18 +6,17 @@ from importlib.util import spec_from_file_location, module_from_spec
 from uuid import uuid4
 import numpy as np
 import threading
-import pathlib
 import json
 import os
 from pathlib import Path
-
+from utils.path import user_path
 
 class User:
     def __init__(self, userId: str):
         self.userId = userId
 
         # PATHS
-        self.__user = os.path.abspath(f"./users/{self.userId}")
+        self.__user = os.path.abspath(f"{user_path}/{self.userId}")
         self.__corpus = Path(f"{self.__user}/corpus")
         self.__sessions = Path(f"{self.__user}/sessions")
         self.__graph = Path(f"{self.__user}/graph.json")

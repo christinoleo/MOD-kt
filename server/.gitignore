@@ -1,4 +1,5 @@
 # created by virtualenv automatically
-static/
-log/
+log/*
+!log/.keepdir
 sys
+__pycache__

@@ -7,16 +7,14 @@ from typing import List, Iterable, Dict
 from models.document import infer_doc2vec
 from os.path import basename, splitext, isfile
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-from utils import calculateSample, l2_norm, batch_processing
-
+from utils.utils import calculateSample, l2_norm, batch_processing
+from utils.path import user_path
 
 name = splitext(basename(__file__))[0]
 
 
 def model_path(userId: str) -> str:
-    return str(Path(
-        f"./users/{userId}/{name}.bin"
-    ).resolve())
+    return str(Path(f"{user_path}/{userId}/{name}.bin").resolve())
 
 
 def load_model(userId: str) -> Doc2Vec:
@@ -34,10 +32,8 @@ def save_model(userId: str, model: Doc2Vec):
 
 def train_model(userId: str, corpus: Iterable[str]) -> Iterable:
     tagged_data = [
-        TaggedDocument(
-            doc.split(" "),
-            tags=[i]
-        ) for i, doc in enumerate(corpus)]
+        TaggedDocument(doc.split(" "), tags=[i]) for i, doc in enumerate(corpus)
+    ]
 
     corpus_size = len(corpus)
 
@@ -56,14 +52,14 @@ def train_model(userId: str, corpus: Iterable[str]) -> Iterable:
         ns_expoent=0.75,
         min_count=5,
         workers=cpu_count(),
-        epochs=40)
+        epochs=40,
+    )
 
     model.build_vocab(documents=tagged_data)
 
     model.train(
-        documents=shuffle(tagged_data),
-        total_examples=model.corpus_count,
-        epochs=40)
+        documents=shuffle(tagged_data), total_examples=model.corpus_count, epochs=40
+    )
 
     model.docvecs.init_sims()
     save_model(userId=userId, model=model)
@@ -75,24 +71,23 @@ def get_vectors(userId: str, data: Iterable[str]) -> List[List[float]]:
 
     model.docvecs.init_sims()
 
-    return l2_norm(batch_processing(
-        fn=infer_doc2vec,
-        data=data,
-        model=model)
-    ).tolist() if data else model.docvecs.vectors_docs_norm.tolist()
+    return (
+        l2_norm(batch_processing(fn=infer_doc2vec, data=data, model=model)).tolist()
+        if data
+        else model.docvecs.vectors_docs_norm.tolist()
+    )
 
 
-def cluster(userId: str,
-            seed_paragraphs: Iterable[Dict[str, Iterable]],
-            k: int,
-            embeddings: List) -> Iterable[int]:
+def cluster(
+    userId: str,
+    seed_paragraphs: Iterable[Dict[str, Iterable]],
+    k: int,
+    embeddings: List,
+) -> Iterable[int]:
     doc_seeds = get_vectors(
-        userId=userId,
-        data=[" ".join(p["paragraph"]) for p in seed_paragraphs])
+        userId=userId, data=[" ".join(p["paragraph"]) for p in seed_paragraphs]
+    )
 
     return KMeans(
-        n_clusters=k,
-        init=np.array(doc_seeds, dtype=np.float32),
-        n_init=10,
-        tol=1e-5
+        n_clusters=k, init=np.array(doc_seeds, dtype=np.float32), n_init=10, tol=1e-5
     ).fit_predict(embeddings)

@@ -20,7 +20,6 @@ router = APIRouter(prefix="/word_similarity")
 
 @router.post("")
 def word_similarity(form: WordSimilarityForm):
-
     try:
         user = fetch_user(userId=form.userId)
 
@@ -31,6 +30,6 @@ def word_similarity(form: WordSimilarityForm):
         return WordSimilarityResponse(**response)
 
     except Exception as e:
-        LOGGER.debug(e)
+        LOGGER.error(e)
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)

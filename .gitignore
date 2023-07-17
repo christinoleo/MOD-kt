@@ -6,3 +6,5 @@ vetur.config.js
 example/
 log
 .idea
+server/static
+server/log

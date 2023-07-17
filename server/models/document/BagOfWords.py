@@ -5,18 +5,17 @@ from sklearn.cluster import KMeans
 from typing import Iterable, List, Dict
 from scipy.spatial.distance import cosine
 from os.path import basename, splitext, isfile
+from utils.path import user_path
 
 name = splitext(basename(__file__))[0]
 
 # default parameters
 confidenceUser = 50
-documentPercentileInit = 20.0 * 2 ** (2*(1-confidenceUser/50.0))
+documentPercentileInit = 20.0 * 2 ** (2 * (1 - confidenceUser / 50.0))
 
 
 def model_path(userId: str) -> str:
-    return str(Path(
-        f"./users/{userId}/{name}.bin"
-    ).resolve())
+    return str(Path(f"{user_path}/{userId}/{name}.bin").resolve())
 
 
 def load_model(userId: str) -> BagOfWords:
@@ -43,10 +42,12 @@ def get_vectors(userId: str, data: Iterable[str]) -> List[List[float]]:
     return model.predict(data=data) if data else model.matrix.tolist()
 
 
-def cluster(userId: str,
-            seed_paragraphs: Iterable[Dict[str, Iterable]],
-            k: int,
-            embeddings: List) -> Iterable[int]:
+def cluster(
+    userId: str,
+    seed_paragraphs: Iterable[Dict[str, Iterable]],
+    k: int,
+    embeddings: List,
+) -> Iterable[int]:
     # iKMeans clustering
     embeddings = np.array(embeddings)
     n, m = embeddings.shape
@@ -58,7 +59,8 @@ def cluster(userId: str,
     for index, centroid in enumerate(seedDocumentsTerms):
         for document_index in range(0, n):
             seedDocumentsTermsCosine[index, document_index] = cosine(
-                centroid, embeddings[document_index, :])
+                centroid, embeddings[document_index, :]
+            )
 
     # upper bound for the number of terms of each cluster
     documentPercentile = documentPercentileInit * n / 100
@@ -78,8 +80,4 @@ def cluster(userId: str,
         seedDocuments[index] /= counter
 
     # run kmeans
-    return KMeans(
-        n_clusters=k,
-        init=seedDocuments,
-        n_init=1
-    ).fit_predict(embeddings)
+    return KMeans(n_clusters=k, init=seedDocuments, n_init=1).fit_predict(embeddings)

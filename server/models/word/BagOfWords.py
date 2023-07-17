@@ -1,24 +1,23 @@
 from os.path import basename, splitext, isfile
 from scipy.spatial.distance import cosine
 from models.document import BestCMeans
-from utils import process_text, synonyms
+from utils.utils import process_text, synonyms
 from models import BagOfWords
 from typing import Iterable
 from pathlib import Path
 import numpy as np
+from utils.path import user_path
 
 
 name = splitext(basename(__file__))[0]
 
 # Default variables
 confidenceUser = 50
-termPercentileInit = 10.0 * 2 ** (2*(1-confidenceUser/50.0))
+termPercentileInit = 10.0 * 2 ** (2 * (1 - confidenceUser / 50.0))
 
 
 def model_path(userId: str) -> str:
-    return str(Path(
-        f"./users/{userId}/{name}.bin"
-    ).resolve())
+    return str(Path(f"{user_path}/{userId}/{name}.bin").resolve())
 
 
 def load_model(userId: str) -> BagOfWords:
@@ -42,28 +41,21 @@ def train_model(userId: str, corpus: Iterable[str]) -> BagOfWords:
 def get_vectors(userId: str, data: Iterable[str]) -> Iterable[Iterable[float]]:
     model = load_model(userId=userId)
     if not model:
-        model = train_model(
-            userId=userId,
-            corpus=data)
+        model = train_model(userId=userId, corpus=data)
 
     return np.transpose(model.matrix)
 
 
-def cluster(userId: str,
-            k: int,
-            seed: dict = None) -> Iterable[Iterable[float]]:
+def cluster(userId: str, k: int, seed: dict = None) -> Iterable[Iterable[float]]:
     def handle_unseen_words(words: list) -> list:
-        words_filtered = [
-            *filter(lambda word: word in model.vocabulary, words)]
+        words_filtered = [*filter(lambda word: word in model.vocabulary, words)]
         if len(words) != 0 and len(words_filtered) == 0:
             synonyms = []
             for word in words:
                 synonyms += [process_text(syn) for syn in synonyms(word)]
-            synonyms = [
-                *filter(lambda word: word in model.vocabulary, synonyms)]
+            synonyms = [*filter(lambda word: word in model.vocabulary, synonyms)]
             if len(synonyms) == 0:
-                raise Exception(
-                    "Neither the words nor its synonyms in the vocabulary")
+                raise Exception("Neither the words nor its synonyms in the vocabulary")
             else:
                 words_filtered = [*synonyms]
 
@@ -77,18 +69,19 @@ def cluster(userId: str,
     clusterTerms = []
     if seed:
         for i in range(k):
-            clusterTerms.append(handle_unseen_words([
-                word["word"]
-                for word in seed["cluster_words"][i]
-                if word["weight"] > 0]))
+            clusterTerms.append(
+                handle_unseen_words(
+                    [
+                        word["word"]
+                        for word in seed["cluster_words"][i]
+                        if word["weight"] > 0
+                    ]
+                )
+            )
     else:
         _, u, _, _, _, _, _ = BestCMeans().fit_predict(
-            data=model.matrix,
-            c=k,
-            m=1.1,
-            error=0.005,
-            maxiter=50,
-            init=None)
+            data=model.matrix, c=k, m=1.1, error=0.005, maxiter=50, init=None
+        )
 
         for cluster in u:
             temp = []
@@ -116,8 +109,7 @@ def seed_paragraph(userId: str, centroid: Iterable, topn: int = 50) -> dict:
     termCentroidCosine = np.zeros(model.m)
 
     for termIndex in range(0, model.m):
-        termCentroidCosine[termIndex] = cosine(
-            centroid, model.matrix[:, termIndex])
+        termCentroidCosine[termIndex] = cosine(centroid, model.matrix[:, termIndex])
 
     # upper bound for the number of terms of each cluster
     termPercentile = termPercentileInit * model.m / 100
@@ -139,8 +131,8 @@ def seed_paragraph(userId: str, centroid: Iterable, topn: int = 50) -> dict:
         center[min_idx] = 2
 
     return dict(
-        paragraph=[model.vocabulary[i] for i in indexes],
-        vector=seedDocumentsTerms)
+        paragraph=[model.vocabulary[i] for i in indexes], vector=seedDocumentsTerms
+    )
 
 
 def most_similar(userId: str, positive: list, topn: int = 10) -> list:
@@ -153,8 +145,7 @@ def most_similar(userId: str, positive: list, topn: int = 10) -> list:
             syns += [process_text(syn) for syn in synonyms(word)]
         syns = [*filter(lambda word: word in model.vocabulary, syns)]
         if len(syns) == 0:
-            raise Exception(
-                "Neither the words nor its synonyms in the vocabulary")
+            raise Exception("Neither the words nor its synonyms in the vocabulary")
         else:
             words_filtered = [*syns]
 
@@ -172,9 +163,12 @@ def most_similar(userId: str, positive: list, topn: int = 10) -> list:
     result, i = [], 0
     while len(result) < 10:
         if not model.vocabulary[indexes[i]] in positive:
-            result.append({
-                "word": model.vocabulary[indexes[i]],
-                "value": float(1.0 - termCentroidCosine[indexes[i]])})
+            result.append(
+                {
+                    "word": model.vocabulary[indexes[i]],
+                    "value": float(1.0 - termCentroidCosine[indexes[i]]),
+                }
+            )
         i += 1
 
     return result

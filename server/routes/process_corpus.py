@@ -1,7 +1,7 @@
 from routes import LOGGER, fetch_user, UserData, ErrorResponse
 from typing import List, Dict, Optional
 from models.document import Document
-from utils import (
+from utils.utils import (
     process_text,
     term_frequency,
     batch_processing,
@@ -79,7 +79,7 @@ def process_corpus(form: ProcessCorpusForm):
         return ProcessCorpusResponse(**response)
 
     except Exception as e:
-        LOGGER.debug(e)
+        LOGGER.error(e)
         traceback.print_exc()
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)
@@ -148,6 +148,6 @@ def process_corpus(form: ProcessCorpusIncrementForm):
         return ProcessCorpusResponse(**response)
 
     except Exception as e:
-        LOGGER.debug(e)
+        LOGGER.error(e)
         response = {"message": {"title": str(type(e)), "content": str(e)}}
         return ErrorResponse(**response)
