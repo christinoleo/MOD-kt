@@ -313,7 +313,7 @@ export default {
         return this.controls.distance;
       },
       set(distance) {
-        this.$store.state.session.controls.distance = distance;
+        this.$store.commit("session/setDistance", distance);
       },
     },
     perplexity: {
@@ -329,7 +329,7 @@ export default {
         return this.controls.charge;
       },
       set(charge) {
-        this.$store.state.session.controls.charge = charge;
+        this.$store.commit("session/setCharge", charge);
       },
     },
     linkDistance: {
@@ -337,7 +337,7 @@ export default {
         return this.controls.linkDistance;
       },
       set(linkDistance) {
-        this.$store.state.session.controls.linkDistance = linkDistance;
+        this.$store.commit("session/setLinkDistance", linkDistance);
       },
     },
     ...mapState("session", [

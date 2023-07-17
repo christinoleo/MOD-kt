@@ -5,3 +5,4 @@ vetur.config.js
 /venv/
 example/
 log
+.idea

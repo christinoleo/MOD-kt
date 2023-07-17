@@ -3,6 +3,7 @@
     <b-button
       id="fab-btn"
       class="mr-1"
+      :disabled="VAKGThoughts.length > 0"
       :variant="
         this.isRecording ? 'danger' : this.isSending ? 'warning' : 'info'
       "
@@ -57,8 +58,8 @@ export default {
       this.VAKGThoughts = "(sending speech): " + transcript;
       this.sr.stop();
       this.isSending = true;
-      this.newThought(this.VAKGThoughts).then(() => {
-        console.log("Empty", this.VAKGThoughts);
+      this.newThought(transcript).then(() => {
+        console.log("Empty", transcript);
         this.VAKGThoughts = "";
         this.isSending = false;
         // this.sr.start();
@@ -94,7 +95,7 @@ export default {
       }
     },
     thoughts_keydown_handler(event) {
-      if (this.VAKG && event.which === 13) {
+      if (event.which === 13) {
         console.log("Enter pressed", this.VAKGThoughts);
         this.isSending = true;
         this.newThought(this.VAKGThoughts).then(() => {

@@ -18,13 +18,16 @@ export default new Vuex.Store({
   plugins: [
     (store) => {
       store.subscribe((mutations, state) => {
-        // console.log("mutations", mutations, JSON.parse(JSON.stringify(state)));
+        console.log("mutations", mutations, JSON.parse(JSON.stringify(state)));
         const when = [
           "session/setSelected",
           "session/updateSelected",
           "session/setWordSimilarity",
           "session/setProjection",
           "session/setPerplexity",
+          "session/setDistance",
+          "session/setCharge",
+          "session/setLinkDistance",
         ];
         if (when.includes(mutations.type)) {
           const curr_state = JSON.parse(JSON.stringify(state.session));

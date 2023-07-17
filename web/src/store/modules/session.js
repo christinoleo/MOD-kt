@@ -144,6 +144,15 @@ const mutations = {
   setPerplexity(state, value) {
     state.controls.tsne.perplexity = value;
   },
+  setDistance(state, value) {
+    state.controls.distance = value;
+  },
+  setCharge(state, value) {
+    state.controls.charge = value;
+  },
+  setLinkDistance(state, value) {
+    state.controls.linkDistance = value;
+  },
 };
 
 const getters = {
