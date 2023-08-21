@@ -2,8 +2,9 @@ import axios from "axios";
 
 export const VAKG = process.env.VUE_APP_VAKG_SERVER
   ? axios.create({
-      baseURL: `http://${process.env.VUE_APP_VAKG_SERVER}`,
+      baseURL: `${process.env.VUE_APP_VAKG_SERVER}`,
       timeout: 3_600_000, // 60 min in ms
+      rejectUnauthorized: false,
     })
   : undefined;
 
@@ -17,18 +18,24 @@ export function sendVAKGState(curr_state, label, userID, sessionID) {
 
     console.log("Current State: ", curr_state, label);
     console.log("Sending to VAKG");
-    VAKG.post(`/knowledge/new_state`, {
-      graph: { id: 0 },
-      h_sequence: null,
-      m_sequence: {
-        state: { label: label, data: curr_state },
-        sequence: {
-          label: label,
-          user: userID,
-          analysis: sessionID,
-          data: curr_state,
-        },
+    fetch(process.env.VUE_APP_VAKG_SERVER + "/knowledge/new_state", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        graph: { id: 0 },
+        h_sequence: null,
+        m_sequence: {
+          state: { label: label, data: curr_state },
+          sequence: {
+            label: label,
+            user: userID,
+            analysis: sessionID,
+            data: curr_state,
+          },
+        },
+      }),
     })
       .then((r) => {
         console.log("VAKG Response: ", r);

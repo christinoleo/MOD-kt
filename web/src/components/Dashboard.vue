@@ -312,18 +312,18 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="sass">
 .dashboard
-	padding: 5px
-	border: 0!important
-	margin: 0!important
+  padding: 5px
+  border: 0!important
+  margin: 0!important
 
 .component
-	border: 1px solid #c3c3c3
+  border: 1px solid #c3c3c3
 
 .card
-	header
-		padding: 0
-		text-align: center
-		height: 25px
+  header
+    padding: 0
+    text-align: center
+    height: 25px
 
 #documentView
   height: 45vh !important

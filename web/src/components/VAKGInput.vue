@@ -9,7 +9,7 @@
       "
       @click="(event) => toggleMicrophone(event)"
     >
-      <font-awesome-icon :icon="['fas', 'microphone']" />&nbsp;
+      <font-awesome-icon :icon="['fas', 'microphone']" />
     </b-button>
     <div v-text="transcript"></div>
     <b-form-input
@@ -74,7 +74,7 @@ export default {
       this.isRecording = false;
       console.log("Speech recognition service stopped", this.isRecording, e);
     };
-    this.sr.onerror = function(event) {
+    this.sr.onerror = function (event) {
       console.error(event);
     };
   },

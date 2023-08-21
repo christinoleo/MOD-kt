@@ -363,7 +363,7 @@ export default {
       .force("center", d3.forceCenter())
       .force("forceX", d3.forceX())
       .force("forceY", d3.forceY())
-      .on("tick", function() {
+      .on("tick", function () {
         objRef.node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
 
         objRef.link
@@ -393,10 +393,7 @@ export default {
     this.canvas = this.svg.append("g");
 
     // 	LINKS
-    this.link = this.canvas
-      .append("g")
-      .attr("class", "link")
-      .selectAll("line");
+    this.link = this.canvas.append("g").attr("class", "link").selectAll("line");
 
     // 	NODES
     this.node = this.canvas
@@ -404,10 +401,7 @@ export default {
       .attr("class", "node")
       .selectAll("circle");
 
-    this.tooltip = d3
-      .select("body")
-      .append("div")
-      .attr("id", "node-tooltip");
+    this.tooltip = d3.select("body").append("div").attr("id", "node-tooltip");
 
     this.updateLayout();
   },
@@ -427,10 +421,7 @@ export default {
     this.svg.remove();
     this.svg = null;
 
-    this.simulation
-      .nodes([])
-      .force("link")
-      .links([]);
+    this.simulation.nodes([]).force("link").links([]);
     this.simulation = null;
   },
   methods: {
@@ -482,7 +473,7 @@ export default {
           let _label = objRef.clusters.labels[i];
           return objRef.clusters.colors[_label];
         })
-        .on("click", function(e, d) {
+        .on("click", function (e, d) {
           // TODO FIX selection
           let index = objRef.selected.indexOf(d.id);
           if (e.ctrlKey) {
@@ -533,20 +524,20 @@ export default {
         .call(
           d3
             .drag()
-            .on("start", function(e, d) {
+            .on("start", function (e, d) {
               if (_projection) {
                 if (!e.active) objRef.simulation.alpha(1).restart();
                 d.fx = d.x;
                 d.fy = d.y;
               }
             })
-            .on("drag", function(e, d) {
+            .on("drag", function (e, d) {
               if (_projection) {
                 d.fx = e.x;
                 d.fy = e.y;
               }
             })
-            .on("end", function(e, d) {
+            .on("end", function (e, d) {
               if (_projection) {
                 if (e.active) objRef.simulation.alpha(1);
                 d.fx = null;
@@ -673,27 +664,27 @@ export default {
   z-index: 2
 
 #graphViewCanvas
-	z-index: 1
+  -index: 1
 
 #projectionToggler
-	position: absolute
-	z-index: 2
-	top: 30px
-	right: 5px
+  position: absolute
+  z-index: 2
+  top: 30px
+  right: 5px
 
 #graphViewControls
-	margin: 1px
-	border: 1px
-	padding: 10px 1px 1px 1px
+  margin: 1px
+  border: 1px
+  padding: 10px 1px 1px 1px
 
 svg
   flex-basis: 100%
 
 #metricsPanel
-	margin: 0
+  margin: 0
 
 #graph_counter
-	padding-top: 5px
+  padding-top: 5px
 
 .link
   line
@@ -727,7 +718,7 @@ svg
       opacity: 1.0
 
 #projectionSwitcher
-	margin: 5px 0 5px 5px
+  margin: 5px 0 5px 5px
   height: 20px
 
 #node-tooltip
